@@ -11,13 +11,27 @@
 
     <h1>TgViz</h1>
 
-    <div id="dataInput">
+    <datalist list="user-names" id="user-names">
+    </datalist>
+
+    <div id="upper-info">
         <input type="file" id="file-selector" onchange="handleFileUpload(event)"/>
+
+        <ul id="basicInfo">
+        </ul>
     </div>
 
-    <div>
-        <ul id="basicInfo" style="display:none">
-        </ul>
+    <div id="user-select" style="visibility: hidden;">
+        <div id="user-select-textinputs" style="white-space: nowrap;">
+            <input list="user-names"/>
+            <input list="user-names"/>
+        </div>
+
+        <div id="user-select-buttons">
+            <button type="button" onclick="removeTextInput()">-</button>
+            <button type="button" onclick="addTextInput()">+</button>
+            <button type="button">Analyze</button>
+        </div>
     </div>
 
 </body>
