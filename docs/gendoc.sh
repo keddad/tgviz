@@ -1,4 +1,7 @@
 pdflatex tz/tz.tex
 pdflatex tz/tz.tex
 
-rm tz.toc tz.out tz.log tz.aux
+pdflatex pz/pz.tex
+pdflatex pz/pz.tex
+
+rm *.toc *.out *.log *.aux
