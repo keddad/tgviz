@@ -1,6 +1,5 @@
 telegramData = {}
-sourceToMessage = {}
-nameToSource = {}
+graph = null
 
 function parseBasicInfo() {
     const output = document.getElementById('basicInfo');
@@ -15,8 +14,19 @@ function parseBasicInfo() {
     output.appendChild(nameElem);
 
     nameElem = document.createElement("li");
-    nameElem.textContent = `Message sources: ${Object.keys(sourceToMessage).length}`;
+    nameElem.textContent = `Message sources: ${Object.keys(graph.actorNameToId).length}`;
     output.appendChild(nameElem);
+}
+
+async function invokePlotter() {
+    const targetElem = document.getElementById("echart");
+    const additionalSearch = document.getElementById("mentionsButton").value;
+
+    users = Array.from(
+        document.getElementById("user-select-textinputs").children
+    ).map((it) => it.value)
+
+    drawGraph(graph, users, additionalSearch, targetElem)
 }
 
 async function removeTextInput() {
@@ -39,32 +49,13 @@ async function addTextInput() {
 async function handleFileUpload(event) {
     const file = event.target.files.item(0)
     telegramData = JSON.parse(await file.text());
-    sourceToMessage = {}
-
-    for (chat of telegramData["chats"]["list"]) {
-        for (message of (chat["messages"] || [])) {
-            if ("from_id" in message) {
-                source = message["from_id"];
-
-                if (source in sourceToMessage) {
-                    sourceToMessage[source] += [message];
-                } else {
-                    sourceToMessage[source] = [message];
-                }
-
-                source_name = message["from"];
-
-                if (!(source_name in nameToSource)) {
-                    nameToSource[source_name] = source;
-                }
-            }
-        }
-    }
+    
+    graph = calculateGraph(telegramData)
 
     const datalist = document.getElementById("user-names")
     datalist.innerHTML = "";
 
-    for (source of Object.keys(nameToSource)) {
+    for (source of Object.keys(graph.actorNameToId)) {
         option = document.createElement("option");
         option.value = source;
 
