@@ -6,21 +6,21 @@ function parseBasicInfo() {
     output.innerHTML = "";
 
     nameElem = document.createElement("li");
-    nameElem.textContent = `${telegramData["personal_information"]["first_name"]} ${telegramData["personal_information"]["last_name"]}`;
+    nameElem.textContent = `${telegramData["personal_information"]["first_name"] || "Unknown Firstname"} ${telegramData["personal_information"]["last_name"] || "Unknown Lastname"}`;
     output.appendChild(nameElem);
 
     nameElem = document.createElement("li");
-    nameElem.textContent = `Contacts: ${Object.keys(telegramData["contacts"]).length}`;
+    nameElem.textContent = `Contacts: ${(telegramData["contacts"]["list"] || []).length}`;
     output.appendChild(nameElem);
 
     nameElem = document.createElement("li");
-    nameElem.textContent = `Message sources: ${Object.keys(graph.actorNameToId).length}`;
+    nameElem.textContent = `Message sources: ${Object.keys(graph.actorIdToName).length}`;
     output.appendChild(nameElem);
 }
 
 async function invokePlotter() {
     const targetElem = document.getElementById("echart");
-    const additionalSearch = document.getElementById("mentionsButton").value;
+    const additionalSearch = document.getElementById("mentionsButton").checked;
 
     users = Array.from(
         document.getElementById("user-select-textinputs").children
