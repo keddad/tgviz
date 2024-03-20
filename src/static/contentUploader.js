@@ -47,7 +47,10 @@ async function addTextInput() {
 }
 
 async function handleFileUpload(event) {
-    const file = event.target.files.item(0)
+    const loadingDiv = document.getElementById('loading');
+    loadingDiv.style.visibility = 'visible';
+
+    const file = event.target.files.item(0);
     telegramData = JSON.parse(await file.text());
     
     graph = calculateGraph(telegramData)
@@ -63,6 +66,8 @@ async function handleFileUpload(event) {
     }
 
     parseBasicInfo()
+
+    loadingDiv.style.visibility = 'hidden';
 
     const analyzeDiv = document.getElementById("user-select");
     analyzeDiv.style = "";
