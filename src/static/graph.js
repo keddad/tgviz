@@ -10,30 +10,38 @@ class Graph {
 
     actorToChatMapping = {}; // User writing something in chat. [user_id][chat_id] = [messages]
     actorToActorMapping = {}; // User mentioning another user. [user_a_id][user_b_id] = [messages]
+
+    chatCategories = {};
 }
 
 function calculateGraph(telegramData) {
     const graph = new Graph();
 
     for (chat of telegramData["chats"]["list"]) {
+        chat_id = chat["id"];
+        chat_name = chat["name"];
+
+        if (chat_name in graph.chatNameToId && graph.chatNameToId[chat_name] != chat_id) {
+            chat_name += ("_" + chat_id);
+        }
+
+        graph.chatIdToName[chat_id] = chat_name;
+        graph.chatNameToId[chat_name] = chat_id;
+
+        graph.chatCategories[chat_id] = chat.type;
+
         for (message of (chat["messages"] || [])) {
             if ("from_id" in message) { // Skip technical messages, like groupadd
                 actor_id = message["from_id"];
                 actor_name = message["from"];
 
-                chat_id = chat["id"];
-                chat_name = chat["name"];
+                
 
                 if (actor_name in graph.actorNameToId && graph.actorNameToId[actor_name] != actor_id) {
                     actor_name += ("_" + actor_id); // Handle visible name conflicts
                 }
 
-                if (chat_name in graph.chatNameToId && graph.chatNameToId[chat_name] != chat_id) {
-                    chat_name += ("_" + chat_id);
-                }
-
-                graph.chatIdToName[chat_id] = chat_name;
-                graph.chatNameToId[chat_name] = chat_id;
+                
 
                 graph.actorIdToName[actor_id] = actor_name;
                 graph.actorNameToId[actor_name] = actor_id;
@@ -95,7 +103,7 @@ function calculateGraph(telegramData) {
 
 function _enrichConnections(graph, connections) {
     nodes = [];
-    routed_messages = [];
+    routedMessages = [];
 
     for ([node_a, child_nodes] of Object.entries(connections)) {
         if (!nodes.includes(node_a)) {
@@ -109,14 +117,14 @@ function _enrichConnections(graph, connections) {
 
             for (msg of (graph.chatIdToMessages[node_a] || []).concat(graph.actorIdToMessages[node_a] || [])) {
                 if (msg.chat_id == node_b) {
-                    routed_messages.push([node_a, node_b, msg]);
+                    routedMessages.push([node_a, node_b, msg]);
                 }
             }
 
             if (node_a in graph.actorToActorMapping) {
                 if (node_b in graph.actorToActorMapping[node_a]) {
                     for (msg of graph.actorToActorMapping[node_a][node_b]) {
-                        routed_messages.push([node_a, node_b, msg]);
+                        routedMessages.push([node_a, node_b, msg]);
                     }
                 }
             }
@@ -124,7 +132,10 @@ function _enrichConnections(graph, connections) {
     }
 
 
-    return [nodes, routed_messages];
+    return {
+        nodes: nodes,
+        routedMessages: routedMessages,
+    };
 }
 
 function _extractConnections(graph, targetIds, additionalSearch) {
@@ -164,12 +175,40 @@ function _extractConnections(graph, targetIds, additionalSearch) {
     return _enrichConnections(graph, connections);
 }
 
+function _enrichCategory(name) {
+    CategoryShapes = ['circle', 'rect', 'roundRect', 'triangle', 'diamond'];
+    CategoryColors = ['#484f4f', '#8ca3a3', '#563f46', '#c8c3cc', '#625750', '#96897f', '#cab577', '#7e4a35'];
+
+    cat = {}; // meow
+    cat.name = name;
+
+    charCodeSum = [...name].map(x => x.charCodeAt()).reduce((a,b)=>a+b); // js is horrifying
+
+    symbol = CategoryShapes[charCodeSum % CategoryShapes.length];
+    color = CategoryColors[charCodeSum % CategoryColors.length];
+
+    cat.symbol = symbol;
+    cat.itemStyle = {
+        color: color
+    };
+    cat.label = {
+        fontSize: 16
+    };
+
+    return cat;
+}
+
 function drawGraph(graph, targetUsers, additionalSearch, targetElem) {
+    categories_names = [...new Set(Object.values(graph.chatCategories)), "user"];
+
     option = {
         title: {
-          text: 'Connection Graph'
+          text: 'Basic Graph'
         },
         tooltip: {},
+        legend: {
+            data: categories_names,
+        },
         animationDurationUpdate: 1500,
         animationEasingUpdate: 'quinticInOut',
         series: [
@@ -181,6 +220,7 @@ function drawGraph(graph, targetUsers, additionalSearch, targetElem) {
             label: {
               show: true
             },
+            categories: categories_names.map(_enrichCategory),
             edgeSymbol: ['circle', 'arrow'],
             edgeSymbolSize: [4, 10],
             edgeLabel: {
@@ -197,8 +237,23 @@ function drawGraph(graph, targetUsers, additionalSearch, targetElem) {
         ]
       };
 
+
       targetIds = targetUsers.map(x => (graph.actorNameToId[x] || graph.chatNameToId[x])).filter(it => it);
       linkInformation = _extractConnections(graph, targetIds, additionalSearch);
+
+      metUsers = 0;
+      metChats = 0;
+
+      option.series[0].data = linkInformation.nodes.map(
+        (x) => (
+            {
+                name: (graph.actorIdToName[x] || graph.chatIdToName[x]),
+                x: 100 * (x.includes("user") ? metUsers++ : metChats++), // My sanity leaves my body with each line
+                y: x.includes("user") ? 0 : 100,
+                category: categories_names.indexOf(graph.chatCategories[x] || "user"),
+            }
+        )
+      );
 
       chart = echarts.init(targetElem);
       chart.setOption(option)

@@ -26,7 +26,7 @@ async function invokePlotter() {
         document.getElementById("user-select-textinputs").children
     ).map((it) => it.value)
 
-    drawGraph(graph, users, additionalSearch, targetElem)
+    drawGraph(graph, users, additionalSearch, targetElem);
 }
 
 async function removeTextInput() {
@@ -59,7 +59,7 @@ async function handleFileUpload(event) {
     datalist.innerHTML = "";
 
     for (source of Object.keys(graph.actorNameToId)) {
-        option = document.createElement("option");
+        const option = document.createElement("option");
         option.value = source;
 
         datalist.appendChild(option);
