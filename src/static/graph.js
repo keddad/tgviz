@@ -103,7 +103,7 @@ function calculateGraph(telegramData) {
 
 function _enrichConnections(graph, connections) {
     nodes = [];
-    routedMessages = [];
+    routedMessages = {};
 
     for ([node_a, child_nodes] of Object.entries(connections)) {
         if (!nodes.includes(node_a)) {
@@ -117,14 +117,30 @@ function _enrichConnections(graph, connections) {
 
             for (msg of (graph.chatIdToMessages[node_a] || []).concat(graph.actorIdToMessages[node_a] || [])) {
                 if (msg.chat_id == node_b) {
-                    routedMessages.push([node_a, node_b, msg]);
+                    if (!(node_a in routedMessages)) {
+                        routedMessages[node_a] = {};
+                    }
+
+                    if (!(node_b in routedMessages[node_a])) {
+                        routedMessages[node_a][node_b] = [];
+                    }
+
+                    routedMessages[node_a][node_b].push(msg);
                 }
             }
 
             if (node_a in graph.actorToActorMapping) {
                 if (node_b in graph.actorToActorMapping[node_a]) {
                     for (msg of graph.actorToActorMapping[node_a][node_b]) {
-                        routedMessages.push([node_a, node_b, msg]);
+                        if (!(node_a in routedMessages)) {
+                            routedMessages[node_a] = {};
+                        }
+    
+                        if (!(node_b in routedMessages[node_a])) {
+                            routedMessages[node_a][node_b] = [];
+                        }
+    
+                        routedMessages[node_a][node_b].push(msg);
                     }
                 }
             }
@@ -245,15 +261,28 @@ function drawGraph(graph, targetUsers, additionalSearch, targetElem) {
       metChats = 0;
 
       option.series[0].data = linkInformation.nodes.map(
-        (x) => (
+        (it) => (
             {
-                name: (graph.actorIdToName[x] || graph.chatIdToName[x]),
-                x: 100 * (x.includes("user") ? metUsers++ : metChats++), // My sanity leaves my body with each line
-                y: x.includes("user") ? 0 : 100,
-                category: categories_names.indexOf(graph.chatCategories[x] || "user"),
+                // Echarts for some reason can't handle duplicate visible names
+                // This is not documented anywhere except for random SO question
+                name: (graph.actorIdToName[it] || graph.chatIdToName[it]) + "\n" + it,
+                x: 100 * (it.includes("user") ? metUsers++ : metChats++), // My sanity leaves my body with each line
+                y: it.includes("user") ? 0 : 100,
+                category: categories_names.indexOf(graph.chatCategories[it] || "user"),
             }
         )
       );
+
+      for (node_a of Object.keys(linkInformation.routedMessages)) {
+        for (node_b of Object.keys(linkInformation.routedMessages[node_a])) {
+            link = {
+                source: linkInformation.nodes.indexOf(node_a),
+                target: linkInformation.nodes.indexOf(node_b),
+            }
+
+            option.series[0].links.push(link);
+        }
+      }
 
       chart = echarts.init(targetElem);
       chart.setOption(option)

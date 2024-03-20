@@ -10,7 +10,7 @@ function parseBasicInfo() {
     output.appendChild(nameElem);
 
     nameElem = document.createElement("li");
-    nameElem.textContent = `Contacts: ${(telegramData["contacts"]["list"] || []).length}`;
+    nameElem.textContent = `Contacts: ${(telegramData["contacts"] || {list: []})["list"].length}`;
     output.appendChild(nameElem);
 
     nameElem = document.createElement("li");
