@@ -209,7 +209,7 @@ function _enrichCategory(name) {
     };
     cat.label = {
         fontSize: 16,
-        position: "right"
+        position: name == "user" ? "top" : "bottom"
     };
 
     return cat;
@@ -247,7 +247,7 @@ function drawGraph(graph, targetUsers, additionalSearch, targetElem) {
             lineStyle: {
                 color: 'target',
                 curveness: 0.1,
-                width: 1.5,
+                width: 2,
 
             },
             scaleLimit: {
