@@ -208,7 +208,8 @@ function _enrichCategory(name) {
         color: color
     };
     cat.label = {
-        fontSize: 16
+        fontSize: 16,
+        position: "right"
     };
 
     return cat;
@@ -219,7 +220,7 @@ function drawGraph(graph, targetUsers, additionalSearch, targetElem) {
 
     option = {
         title: {
-          text: 'Basic Graph'
+          text: ''
         },
         tooltip: {},
         legend: {
@@ -231,49 +232,42 @@ function drawGraph(graph, targetUsers, additionalSearch, targetElem) {
           {
             type: 'graph',
             layout: 'none',
-            symbolSize: 50,
             roam: true,
             label: {
               show: true
             },
             categories: categories_names.map(_enrichCategory),
             edgeSymbol: ['circle', 'arrow'],
-            edgeSymbolSize: [4, 10],
+            edgeSymbolSize: 4,
             edgeLabel: {
-              fontSize: 20
+              fontSize: 10
             },
             data: [],
             links: [],
             lineStyle: {
-              opacity: 0.9,
-              width: 2,
-              curveness: 0
-            }
+                color: 'target',
+                curveness: 0.1,
+                width: 1.5,
+
+            },
+            scaleLimit: {
+                min: 0.4,
+                max: 2
+            },
           }
         ]
       };
 
 
-      targetIds = targetUsers.map(x => (graph.actorNameToId[x] || graph.chatNameToId[x])).filter(it => it);
-      linkInformation = _extractConnections(graph, targetIds, additionalSearch);
+    targetIds = targetUsers.map(x => (graph.actorNameToId[x] || graph.chatNameToId[x])).filter(it => it);
+    linkInformation = _extractConnections(graph, targetIds, additionalSearch);
 
-      metUsers = 0;
-      metChats = 0;
+    metUsers = 0;
+    metChats = 0;
 
-      option.series[0].data = linkInformation.nodes.map(
-        (it) => (
-            {
-                // Echarts for some reason can't handle duplicate visible names
-                // This is not documented anywhere except for random SO question
-                name: (graph.actorIdToName[it] || graph.chatIdToName[it]) + "\n" + it,
-                x: 100 * (it.includes("user") ? metUsers++ : metChats++), // My sanity leaves my body with each line
-                y: it.includes("user") ? 0 : 100,
-                category: categories_names.indexOf(graph.chatCategories[it] || "user"),
-            }
-        )
-      );
+    edgeCounter = {}
 
-      for (node_a of Object.keys(linkInformation.routedMessages)) {
+    for (node_a of Object.keys(linkInformation.routedMessages)) {
         for (node_b of Object.keys(linkInformation.routedMessages[node_a])) {
             link = {
                 source: linkInformation.nodes.indexOf(node_a),
@@ -281,9 +275,27 @@ function drawGraph(graph, targetUsers, additionalSearch, targetElem) {
             }
 
             option.series[0].links.push(link);
-        }
-      }
 
-      chart = echarts.init(targetElem);
-      chart.setOption(option)
+            edgeCounter[node_a] = (edgeCounter[node_a] ?? 0) + 1
+            edgeCounter[node_b] = (edgeCounter[node_b] ?? 0) + 1
+        }
+    }
+
+    option.series[0].data = linkInformation.nodes.map(
+        (it) => (
+            {
+                // Echarts for some reason can't handle duplicate visible names
+                // This is not documented anywhere except for random SO question
+                name: (graph.actorIdToName[it] || graph.chatIdToName[it]) + "\n" + it,
+                symbolSize: Math.max(2, Math.min(edgeCounter[it], 20)) * 5,
+                value: edgeCounter[it],
+                x: 100 * (it.includes("user") ? metUsers++ : metChats++), // My sanity leaves my body with each line
+                y: it.includes("user") ? 0 : 100,
+                category: categories_names.indexOf(graph.chatCategories[it] || "user"),
+            }
+        )
+    );
+
+    chart = echarts.init(targetElem);
+    chart.setOption(option)
 }
