@@ -215,6 +215,16 @@ function _enrichCategory(name) {
     return cat;
 }
 
+function _getGraphName(graph, it) {
+    actorName = graph.actorIdToName[it] || graph.chatIdToName[it]
+
+    if (actorName.endsWith(it)) {
+        actorName = actorName.slice(0, actorName.length-it.length-1);
+    } 
+
+    return actorName + "\n" + it;
+}
+
 function drawGraph(graph, targetUsers, additionalSearch, targetElem) {
     categories_names = [...new Set(Object.values(graph.chatCategories)), "user"];
 
@@ -286,7 +296,7 @@ function drawGraph(graph, targetUsers, additionalSearch, targetElem) {
             {
                 // Echarts for some reason can't handle duplicate visible names
                 // This is not documented anywhere except for random SO question
-                name: (graph.actorIdToName[it] || graph.chatIdToName[it]) + "\n" + it,
+                name: _getGraphName(graph, it),
                 symbolSize: Math.max(2, Math.min(edgeCounter[it], 20)) * 5,
                 value: edgeCounter[it],
                 x: 100 * (it.includes("user") ? metUsers++ : metChats++), // My sanity leaves my body with each line
