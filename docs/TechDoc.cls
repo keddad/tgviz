@@ -29,6 +29,7 @@
 \RequirePackage{caption}
 \RequirePackage{etoolbox}
 \RequirePackage{iflang}
+\RequirePackage{listings}
 
 \setcounter{secnumdepth}{4}
 
