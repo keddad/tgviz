@@ -79,6 +79,10 @@ function calculateGraph(telegramData) {
 
             message_text = message["text"] || "";
 
+            if (Object.prototype.toString.call(message_text) === '[object Array]') {
+                message_text = message_text.map(it => (it.text || "")).reduce((partialSum, a) => partialSum + a, "");
+            }
+
             // TODO Support forwards
             
             for (const [s_name, s_actor_id] of Object.entries(graph.actorNameToId)) {
