@@ -82,7 +82,7 @@ function calculateGraph(telegramData) {
             // TODO Support forwards
             
             for (const [s_name, s_actor_id] of Object.entries(graph.actorNameToId)) {
-                if (message_text.includes(s_name)) {
+                if (message_text.toLowerCase().includes(s_name.toLowerCase())) {
                     if (!(actor_id in graph.actorToActorMapping)) {
                         graph.actorToActorMapping[actor_id] = {};
                     }
