@@ -13,3 +13,4 @@ pdflatex ro/ro.tex
 rm *.toc *.out *.log *.aux
 
 pdftk pz.pdf cat 2-end output pz_cut.pdf
+pdftk pz.pdf cat 1 output title.pdf
