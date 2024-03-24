@@ -21,7 +21,7 @@
     <div id="upper-info">
         <p>This tool visualizes user relations from Telegram export.</p>
         <p><b>Information about your messages never leaves your device during processing.</b></p>
-        <p><a href="https://telegram.org/blog/export-and-more?setln=tr">How to export your data from Telegram.</a></p>
+        <p><a href="https://telegram.org/blog/export-and-more?setln=tr" target="_blank">How to export your data from Telegram.</a></p>
 
         <input type="file" id="file-selector" onchange="handleFileUpload(event)"/>
 
@@ -30,9 +30,12 @@
     </div>
 
     <div id="user-select" style="visibility: hidden;">
+        <p class="block">Connections between users indicate that one user mentioned other's name.</p>
+        <p class="block">Connection between a user and a chat indicate that user has written something in that chat.</p>
+        <p class="block">If users are connected by a private chat, it's name will be the same as one of the user's.</p>
+        <p class="block">To hide certain type of chats (for example, group chats), click on them in graph legend.</p>
+
         <div id="user-select-textinputs" style="white-space: nowrap;">
-            <input list="user-names"/>
-            <input list="user-names"/>
         </div>
 
         <div id="user-select-buttons">
@@ -40,7 +43,7 @@
             <button type="button" onclick="addTextInput()">+</button>
             <button type="button" onclick="invokePlotter()"">Analyze</button>
             
-            <input type="checkbox" id="mentionsButton" name="mentionsButton"/>
+            <input type="checkbox" id="mentionsButton" name="mentionsButton" checked/>
             <label for="mentionsButton">Include indirect mentions (can find non-existing relations)</label>
         </div>
 

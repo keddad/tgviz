@@ -22,7 +22,15 @@ input + input {
 
 #echart {
     width: auto;
-    height: 800px;
+    height: 80vh;
+}
+
+#user-select-textinputs {
+    padding: 10px;
+}
+
+.block {
+    margin: 0;
 }
 
 /* Absolute Center Spinner */

@@ -67,6 +67,21 @@ async function handleFileUpload(event) {
 
     parseBasicInfo()
 
+    sortedUsers = Object.keys(graph.actorIdToMessages).sort((a, b) => graph.actorIdToMessages[a].length - graph.actorIdToMessages[b].length).reverse();
+    graphUsers = sortedUsers.slice(0, Math.min(5, sortedUsers.length));
+
+    inputDiv = document.getElementById("user-select-textinputs");
+
+    for (user of graphUsers) {
+        const input = document.createElement("input");
+        input.list = "user-names";
+        input.value = graph.actorIdToName[user];
+
+        inputDiv.appendChild(input);
+    }
+
+    invokePlotter();
+
     loadingDiv.style.visibility = 'hidden';
 
     const analyzeDiv = document.getElementById("user-select");

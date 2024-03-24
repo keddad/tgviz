@@ -230,15 +230,14 @@ function _getGraphName(graph, it) {
 }
 
 function drawGraph(graph, targetUsers, additionalSearch, targetElem) {
-    categories_names = [...new Set(Object.values(graph.chatCategories)), "user"];
-
     option = {
         title: {
           text: ''
         },
         tooltip: {},
         legend: {
-            data: categories_names,
+            data: [],
+            type: "scroll",
         },
         animationDurationUpdate: 1500,
         animationEasingUpdate: 'quinticInOut',
@@ -247,12 +246,13 @@ function drawGraph(graph, targetUsers, additionalSearch, targetElem) {
             type: 'graph',
             layout: 'none',
             roam: true,
+            draggable: true,
             label: {
               show: true
             },
-            categories: categories_names.map(_enrichCategory),
+            categories: [],
             edgeSymbol: ['circle', 'arrow'],
-            edgeSymbolSize: 4,
+            edgeSymbolSize: 8,
             edgeLabel: {
               fontSize: 10
             },
@@ -276,6 +276,11 @@ function drawGraph(graph, targetUsers, additionalSearch, targetElem) {
     targetIds = targetUsers.map(x => (graph.actorNameToId[x] || graph.chatNameToId[x])).filter(it => it);
     linkInformation = _extractConnections(graph, targetIds, additionalSearch);
 
+    categories_names = [...new Set(Object.values(linkInformation.nodes.map(it => graph.chatCategories[it] || "user")))];
+
+    option.legend.data = categories_names;
+    option.series[0].categories = categories_names.map(_enrichCategory);
+
     metUsers = 0;
     metChats = 0;
 
@@ -295,6 +300,12 @@ function drawGraph(graph, targetUsers, additionalSearch, targetElem) {
         }
     }
 
+    userCount = linkInformation.nodes.filter(it => it.includes("user")).length;
+    chatCount = linkInformation.nodes.filter(it => !it.includes("user")).length;
+
+    userNodeBudget = (Math.max(userCount, chatCount) * 100) / userCount;
+    chatNodeBudget = (Math.max(userCount, chatCount) * 100) / chatCount;
+
     option.series[0].data = linkInformation.nodes.map(
         (it) => (
             {
@@ -303,7 +314,7 @@ function drawGraph(graph, targetUsers, additionalSearch, targetElem) {
                 name: _getGraphName(graph, it),
                 symbolSize: Math.max(2, Math.min(edgeCounter[it], 20)) * 5,
                 value: edgeCounter[it],
-                x: 100 * (it.includes("user") ? metUsers++ : metChats++), // My sanity leaves my body with each line
+                x: (it.includes("user") ? userNodeBudget : chatNodeBudget) * (it.includes("user") ? metUsers++ : metChats++), // My sanity leaves my body with each line
                 y: it.includes("user") ? 0 : 100,
                 category: categories_names.indexOf(graph.chatCategories[it] || "user"),
             }
