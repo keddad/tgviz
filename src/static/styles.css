@@ -22,7 +22,7 @@ input + input {
 
 #echart {
     width: auto;
-    height: 80vh;
+    height: max(80vh, 600px);
 }
 
 #user-select-textinputs {
